@@ -1,1 +1,20 @@
-{"name":"prism-relay","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite --host 127.0.0.1 --port 5202 --strictPort","typecheck":"tsc --noEmit","test":"vitest run","build":"tsc --noEmit && vite build","check":"npm run typecheck && npm test && npm run build","start":"node scripts/launch.mjs"},"devDependencies":{"typescript":"^7.0.2","vite":"^8.3.4","vitest":"^5.0.3"}}
+{
+  "name": "prism-relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5202 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc --noEmit && vite build",
+    "check": "npm run typecheck && npm test && npm run build",
+    "start": "node scripts/launch.mjs"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.10",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3"
+  }
+}

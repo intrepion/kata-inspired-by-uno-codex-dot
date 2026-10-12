@@ -1,56 +1,323 @@
-import './style.css';
-import {act, aiTurn, cardLabel, legalCards, names, newMatch, spectra, symbols, type Card, type Spectrum, type Action} from './engine';
-import {decode,encode,saveKey} from './save';
-import {TurnClock} from './lifecycle';
-const app=document.querySelector<HTMLDivElement>('#app')!;
-app.innerHTML=`<header><a class="brand" href="#"><span class="brand-mark">✦</span><span>PRISM <b>RELAY</b><small>THE NIGHT-SHIFT CARD CLUB</small></span></a><nav><button id="rules">How to play</button><button id="reset" class="quiet">New match</button></nav></header>
+import "./style.css";
+import {
+  act,
+  aiTurn,
+  cardLabel,
+  legalCards,
+  names,
+  newMatch,
+  spectra,
+  symbols,
+  type Card,
+  type Spectrum,
+  type Action,
+} from "./engine";
+import { decode, encode, saveKey } from "./save";
+import { TurnClock } from "./lifecycle";
+const app = document.querySelector<HTMLDivElement>("#app")!;
+app.innerHTML = `<header><a class="brand" href="#"><span class="brand-mark">✦</span><span>PRISM <b>RELAY</b><small>THE NIGHT-SHIFT CARD CLUB</small></span></a><nav><button id="rules">How to play</button><button id="reset" class="quiet">New match</button></nav></header>
 <main><section class="intro"><div><p class="eyebrow">THREE SEATS. FOUR SPECTRA. ONE LAST CARD.</p><h1>Keep the light moving.</h1></div><p class="intro-note">Match. Shift. Shed.<br>First to <b>250 points</b> takes the night.</p></section>
-<section class="table" aria-label="Card table"><div class="table-top"><span id="round" class="chip"></span><span id="direction" class="chip"></span></div><div class="opponents" id="opponents"></div><div class="center"><div class="pile-wrap"><button id="draw-pile" class="card back" aria-label="Draw one card"><span class="back-art">✦</span><span>PRISM<br>RELAY</span></button><small id="supply"></small></div><div class="relay-line" aria-hidden="true">→</div><div class="pile-wrap"><div id="discard"></div><small id="active"></small></div></div><div class="turn-panel"><p id="turn" role="status" aria-live="polite"></p><p id="feedback"></p></div><div class="controls"><button id="draw" class="primary">Draw one <kbd>D</kbd></button><button id="pass">Pass drawn card</button><button id="declare" class="signal">Relay! <kbd>R</kbd></button><button id="show-result" hidden>Round result</button></div></section>
+<section class="table" aria-label="Card table"><div class="table-top"><span id="round" class="chip"></span><span id="direction" class="chip"></span></div><div class="opponents" id="opponents"></div><div class="center"><div class="pile-wrap"><button id="draw-pile" class="card back" aria-label="Draw one card"><span class="back-art">✦</span><span>PRISM<br>RELAY</span></button><small id="supply"></small></div><div class="relay-line" aria-hidden="true">→</div><div class="pile-wrap"><div id="discard"></div><small id="active"></small></div></div><div class="turn-panel"><p id="turn" role="status" aria-live="polite"></p><p id="feedback"></p></div><div class="controls"><button id="draw" class="primary">Draw one <kbd>D</kbd></button><button id="pass">Pass drawn card <kbd>P</kbd></button><button id="declare" class="signal">Relay! <kbd>R</kbd></button><button id="show-result" hidden>Round result</button></div></section>
 <section class="hand-zone" aria-label="Your cards"><div class="hand-heading"><h2>Your hand <span id="hand-count"></span></h2><span id="hand-help">Lit cards can be played</span></div><div id="hand" class="hand"></div></section>
 <section class="bottom"><div><h2>Tonight’s score</h2><div id="scores" class="scores"></div></div><div><h2>Table chatter</h2><ol id="log" class="log"></ol></div></section><footer><span id="save-status" role="status"></span><span>Local saves are inspectable and editable; they are not cheat-proof.</span></footer></main>
-<dialog id="wild"><form method="dialog"><p class="eyebrow">A NEW DIRECTION</p><h2>Choose the next spectrum.</h2><p>Your wild stays in your hand until you choose.</p><div id="spectra" class="spectra"></div><button value="cancel" class="quiet">Cancel selection</button></form></dialog>
-<dialog id="guide"><p class="eyebrow">WELCOME TO THE CLUB</p><h2>A little light. A little mischief.</h2><p>Empty your hand before Mira and Sol. Match the active spectrum, number, or action symbol. Lit cards are legal.</p><div class="rule-grid"><article><h3>1 · Follow the light</h3><p>Coral ●, Gold ◆, Mint ▲, Azure ■. Spectrum names and marks work without color. Wild ✦ chooses any spectrum.</p></article><article><h3>2 · Change the rhythm</h3><p>Skip ⊘ misses the next seat. Reverse ⇄ changes direction. +2 and ✦+4 make the next seat draw and miss its turn. No stacking.</p></article><article><h3>3 · Draw, then decide</h3><p>You may draw even with a playable card. Only the newly drawn card can be played, or passed. Unplayable draws pass automatically.</p></article><article><h3>4 · Call your finish</h3><p>With two cards, press Relay! before playing down to one. Miss it and you immediately draw two. Bots always call. D draws; R declares; Tab and Enter play.</p></article></div><details><summary>All rules & compact adaptations</summary><p>108 cards: 0 once, 1–9 twice, two each Skip/Reverse/Draw Two per spectrum, four Wild and four Wild Draw Four. Seven dealt to each of three seats. Number-only opening; other opening cards return to supply. Starting seat rotates each round, direction starts clockwise. No two-player mode.</p><p>Wild Draw Four is legal only with no card of the active spectrum in your hand. Matching symbols do not forbid it. Illegal plays are blocked, so no bluffing, challenges or concealed-hand reveals. Penalties cannot be stacked.</p><p>Any card may finish; draw effects resolve before scoring. A final wild still needs spectrum choice. Winner earns opponents’ number face values, 20 per action, 50 per wild. First to 250 points wins (a shorter target than 500).</p><p>Declaration is armed for this turn only, cancelled by drawing; automatic catch replaces a timed catch window. Empty supply recycles every discard except the top. If all supply is held, draw as many penalty cards as available; three consecutive empty-supply passes end the round with no points.</p><p>Autosave includes the complete match, including drawn choice and AI turns. Cancelling a wild has no game effect. Local saves can be inspected or edited; AI decisions receive only their own hand and public information. Play one browser tab per match; simultaneous tabs maintain separate in-memory games and the last save wins.</p><p>Original adaptation, unaffiliated with Mattel. <a href="https://service.mattel.com/instruction_sheets/W2085-UNO.pdf" target="_blank" rel="noreferrer">Publisher rule reference</a>.</p></details><button id="close-guide" class="primary">Let’s play</button></dialog>
-<dialog id="confirm"><h2>Start a fresh match?</h2><p>This replaces the saved match and clears tonight’s scores.</p><form method="dialog"><button value="cancel">Keep playing</button><button id="confirm-reset" class="primary" value="reset">Start fresh</button></form></dialog>
-<dialog id="result"><p class="eyebrow" id="result-tag"></p><h2 id="result-title"></h2><p id="result-description"></p><div id="result-scores" class="scores"></div><button id="next-round" class="primary"></button><button id="view-table" class="quiet">Review table</button></dialog>`;
-const get=<T extends HTMLElement=HTMLElement>(id:string)=>document.getElementById(id)! as T;
-const wild=get<HTMLDialogElement>('wild'),guide=get<HTMLDialogElement>('guide'),confirm=get<HTMLDialogElement>('confirm'),result=get<HTMLDialogElement>('result');
-let saveNote='Autosaved on this device',loaded=false;
-let state=newMatch();
-try{const raw=localStorage.getItem(saveKey);if(raw){const restored=decode(raw);if(restored){state=restored;loaded=true;}else saveNote='Invalid save ignored · a fresh match is ready';}}catch{saveNote='Storage unavailable · this game will not survive reload';}
-const clock=new TurnClock();let pending:number|null=null;let feedback=loaded?'Saved match restored. Welcome back.':'Welcome. Match a lit card or draw one.';let resultSeen=-1;
-const marks:Record<Spectrum,string>={coral:'●',gold:'◆',mint:'▲',azure:'■'};
-function cardContent(card:Card){const mark=card.spectrum?marks[card.spectrum]:'✦',value=card.kind==='number'?String(card.value):symbols[card.kind];return `<span class="card-corner">${mark} ${value}</span><span class="card-art" aria-hidden="true">${value}</span><span class="card-name">${card.spectrum??'PRISM'}<br>${card.kind==='number'?`NUMBER ${card.value}`:card.kind==='draw2'?'DRAW TWO':card.kind==='draw4'?'WILD DRAW FOUR':card.kind.toUpperCase()}</span>`;}
-function cardElement(c:Card,playable=false){const node=document.createElement(playable?'button':'div');node.className=`card ${c.spectrum??'prism'}`;node.innerHTML=cardContent(c);return node;}
-function save(){try{localStorage.setItem(saveKey,encode(state));if(!saveNote.startsWith('Invalid'))saveNote='Autosaved on this device';}catch{saveNote='Save failed · keep this tab open to retain the match';}}
-function dialogOpen(){return [wild,guide,confirm,result].some(x=>x.open);}
-function schedule(){clock.cancel();if(!dialogOpen()&&state.current!==0&&(state.phase==='turn'||state.phase==='drawn')){const revision=state.revision;clock.schedule(()=>{if(state.revision===revision&&!dialogOpen()){state=aiTurn(state);save();render();}});}}
-function dispatch(action:Action){if(dialogOpen())return;const next=act(state,0,action);if(next===state){feedback='That action is not available now.';get('feedback').textContent=feedback;return;}state=next;feedback='';save();render();}
-function scoreMarkup(){return names.map((name,i)=>`<div><span>${name}</span><b>${state.scores[i]}<small> / 250</small></b></div>`).join('');}
-function render(){
- const focused=document.activeElement?.id;const human=state.current===0&&(state.phase==='turn'||state.phase==='drawn');const legal=legalCards(state);
- get('round').textContent=`ROUND ${String(state.round).padStart(2,'0')}`;get('direction').textContent=state.direction===1?'↻ You → Mira → Sol':'↺ You → Sol → Mira';
- get('opponents').innerHTML=[1,2].map(i=>`<article class="opponent ${state.current===i&&human===false&&(state.phase==='turn'||state.phase==='drawn')?'thinking':''}" aria-label="${names[i]}, ${state.hands[i].length} cards"><div class="avatar">${i===1?'M':'S'}</div><div><h2>${names[i]} <span>${state.hands[i].length===1?'RELAY!':''}</span></h2><p>${state.hands[i].length} cards · ${state.scores[i]} pts</p><div class="mini-backs" aria-hidden="true">${'<i></i>'.repeat(Math.min(8,state.hands[i].length))}</div></div></article>`).join('');
- get('discard').replaceChildren(cardElement(state.discard.at(-1)!));get('active').textContent=`${marks[state.active]} ${state.active.toUpperCase()} IN PLAY`;get('supply').textContent=`${state.deck.length} in supply`;
- get('turn').textContent=state.phase==='round'||state.phase==='match'?(state.winner===null?'Table blocked':`${names[state.winner]} won the round`):human?(state.phase==='drawn'?'Your choice · play the drawn card or pass':'Your turn · keep the light moving'):`${names[state.current]} are thinking…`;
- get('feedback').textContent=feedback||(human&&state.hands[0].length===2&&!state.declared?'Two cards? Call Relay! before you play.':state.declared&&human?'Relay armed · now play your card.':'Match the spectrum, number or symbol.');
- for(const id of ['draw','draw-pile'])get<HTMLButtonElement>(id).disabled=!human||state.phase!=='turn';get<HTMLButtonElement>('pass').disabled=!human||state.phase!=='drawn';get<HTMLButtonElement>('declare').disabled=!human||state.hands[0].length!==2||state.declared;
- get('show-result').hidden=state.phase!=='round'&&state.phase!=='match';
- get('hand-count').textContent=`(${state.hands[0].length})`;get('hand-help').textContent=state.phase==='drawn'&&human?'Only the drawn card can be played':human?'Lit cards can be played':'Waiting for your turn';
- const hand=get('hand');hand.replaceChildren();for(const c of state.hands[0]){const button=cardElement(c,true) as HTMLButtonElement;button.id=`card-${c.id}`;button.disabled=!human||!legal.includes(c.id);button.classList.toggle('legal',!button.disabled);button.classList.toggle('drawn',c.id===state.drawn);button.setAttribute('aria-label',`Play ${cardLabel(c)}${c.id===state.drawn?' (drawn card)':''}`);button.onclick=()=>{if(dialogOpen()||state.current!==0||!legalCards(state).includes(c.id))return;if(c.spectrum===null){pending=c.id;clock.cancel();wild.showModal();}else dispatch({type:'play',id:c.id});};hand.append(button);}
- get('scores').innerHTML=scoreMarkup();get('log').replaceChildren(...state.log.slice(-5).reverse().map(line=>{const li=document.createElement('li');li.textContent=line;return li;}));get('save-status').textContent=saveNote;
- if(focused){const node=document.getElementById(focused) as HTMLButtonElement|null;if(node&&!node.disabled)node.focus({preventScroll:true});}
- if((state.phase==='round'||state.phase==='match')&&resultSeen!==state.revision){resultSeen=state.revision;showResult();}
- schedule();
+<dialog id="wild" aria-labelledby="wild-title"><form method="dialog"><p class="eyebrow">A NEW DIRECTION</p><h2 id="wild-title">Choose the next spectrum.</h2><p>Your wild stays in your hand until you choose.</p><div id="spectra" class="spectra"></div><button value="cancel" class="quiet">Cancel selection</button></form></dialog>
+<dialog id="guide" aria-labelledby="guide-title"><p class="eyebrow">WELCOME TO THE CLUB</p><h2 id="guide-title">A little light. A little mischief.</h2><p>Empty your hand before Mira and Sol. Match the active spectrum, number, or action symbol. Lit cards are legal.</p><div class="rule-grid"><article><h3>1 · Follow the light</h3><p>Coral ●, Gold ◆, Mint ▲, Azure ■. Spectrum names and marks work without color. Wild ✦ chooses any spectrum.</p></article><article><h3>2 · Change the rhythm</h3><p>Skip ⊘ misses the next seat. Reverse ⇄ changes direction. +2 and ✦+4 make the next seat draw and miss its turn. No stacking.</p></article><article><h3>3 · Draw, then decide</h3><p>You may draw even with a playable card. Only the newly drawn card can be played, or passed. Unplayable draws pass automatically.</p></article><article><h3>4 · Call your finish</h3><p>With two cards, press Relay! before playing down to one. Miss it and you immediately draw two. Bots always call. D draws; P passes; R declares; Tab and Enter play.</p></article></div><details><summary>All rules & compact adaptations</summary><p>108 cards: 0 once, 1–9 twice, two each Skip/Reverse/Draw Two per spectrum, four Wild and four Wild Draw Four. Seven dealt to each of three seats. Number-only opening; other opening cards return to supply. Starting seat rotates each round, direction starts clockwise. No two-player mode.</p><p>Wild Draw Four is legal only with no card of the active spectrum in your hand. Matching symbols do not forbid it. Illegal plays are blocked, so no bluffing, challenges or concealed-hand reveals. Penalties cannot be stacked.</p><p>Any card may finish; draw effects resolve before scoring. A final wild still needs spectrum choice. Winner earns opponents’ number face values, 20 per action, 50 per wild. First to 250 points wins (a shorter target than 500).</p><p>Declaration is armed for this turn only, cancelled by drawing; automatic catch replaces a timed catch window. Empty supply recycles every discard except the top. If all supply is held, draw as many penalty cards as available; three consecutive empty-supply passes end the round with no points.</p><p>Autosave includes the complete match, including drawn choice and AI turns. Cancelling a wild has no game effect. Local saves can be inspected or edited; AI decisions receive only their own hand and public information. Play one browser tab per match; simultaneous tabs maintain separate in-memory games and the last save wins.</p><p>Original adaptation, unaffiliated with Mattel. <a href="https://service.mattel.com/instruction_sheets/W2085-UNO.pdf" target="_blank" rel="noreferrer">Publisher rule reference</a>.</p></details><button id="close-guide" class="primary">Let’s play</button></dialog>
+<dialog id="confirm" aria-labelledby="confirm-title"><h2 id="confirm-title">Start a fresh match?</h2><p>This replaces the saved match and clears tonight’s scores.</p><form method="dialog"><button value="cancel">Keep playing</button><button id="confirm-reset" class="primary" value="reset">Start fresh</button></form></dialog>
+<dialog id="result" aria-labelledby="result-title"><p class="eyebrow" id="result-tag"></p><h2 id="result-title"></h2><p id="result-description"></p><div id="result-scores" class="scores"></div><button id="next-round" class="primary"></button><button id="view-table" class="quiet">Review table</button></dialog>`;
+const get = <T extends HTMLElement = HTMLElement>(id: string) =>
+  document.getElementById(id)! as T;
+const wild = get<HTMLDialogElement>("wild"),
+  guide = get<HTMLDialogElement>("guide"),
+  confirm = get<HTMLDialogElement>("confirm"),
+  result = get<HTMLDialogElement>("result");
+let saveNote = "Autosaved on this device",
+  loaded = false;
+let state = newMatch();
+try {
+  const raw = localStorage.getItem(saveKey);
+  if (raw) {
+    const restored = decode(raw);
+    if (restored) {
+      state = restored;
+      loaded = true;
+    } else saveNote = "Invalid save ignored · a fresh match is ready";
+  }
+} catch {
+  saveNote = "Storage unavailable · this game will not survive reload";
 }
-function showResult(){get('result-tag').textContent=state.phase==='match'?'THE NIGHT BELONGS TO…':'ROUND COMPLETE';get('result-title').textContent=state.winner===null?'A quiet table. Deal again.':state.winner===0?(state.phase==='match'?'You take the night!':'You carried the light!'):`${names[state.winner]} ${state.phase==='match'?'take the night.':'win this round.'}`;get('result-description').textContent=state.winner===null?'All supply was held. No points awarded.':`${state.award} points from the remaining hands. ${state.winner===0?'Beautifully played.':'Another deal, another chance.'}`;get('result-scores').innerHTML=scoreMarkup();get('next-round').textContent=state.phase==='match'?'Play a rematch':'Deal next round';clock.cancel();result.showModal();}
-for(const s of spectra){const b=document.createElement('button');b.type='button';b.className=s;b.textContent=`${marks[s]} ${s[0].toUpperCase()+s.slice(1)}`;b.onclick=()=>{const id=pending;pending=null;wild.close();if(id!==null)dispatch({type:'play',id,spectrum:s});};get('spectra').append(b);}
-get('rules').onclick=()=>{clock.cancel();guide.showModal();};get('close-guide').onclick=()=>guide.close();
-get('reset').onclick=()=>{clock.cancel();confirm.showModal();};get('confirm-reset').onclick=()=>{clock.cancel();state=newMatch();feedback='A fresh match. Your move.';resultSeen=-1;save();};
-get('draw').onclick=get('draw-pile').onclick=()=>dispatch({type:'draw'});get('pass').onclick=()=>dispatch({type:'pass'});get('declare').onclick=()=>dispatch({type:'declare'});
-get('next-round').onclick=()=>{const match=state.phase==='match';result.close();if(match){clock.cancel();confirm.showModal();}else{state=act(state,state.current,{type:'next'});feedback='';save();render();}};
-get('view-table').onclick=()=>result.close();get('show-result').onclick=()=>{if(state.phase==='round'||state.phase==='match')showResult();};
-for(const d of [wild,guide,confirm,result]){d.addEventListener('close',()=>{if(d===wild)pending=null;render();});}
-document.addEventListener('keydown',e=>{if(dialogOpen()||e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;if(e.key.toLowerCase()==='d'){e.preventDefault();dispatch({type:'draw'});}if(e.key.toLowerCase()==='r'){e.preventDefault();dispatch({type:'declare'});}});
-document.addEventListener('visibilitychange',()=>{if(document.hidden)clock.cancel();else schedule();});
-window.addEventListener('pagehide',()=>clock.cancel());
-save();render();if(!loaded){clock.cancel();guide.showModal();}
+const clock = new TurnClock();
+let pending: number | null = null;
+let feedback = loaded
+  ? "Saved match restored. Welcome back."
+  : "Welcome. Match a lit card or draw one.";
+let resultSeen = -1;
+const marks: Record<Spectrum, string> = {
+  coral: "●",
+  gold: "◆",
+  mint: "▲",
+  azure: "■",
+};
+function cardContent(card: Card) {
+  const mark = card.spectrum ? marks[card.spectrum] : "✦",
+    value = card.kind === "number" ? String(card.value) : symbols[card.kind];
+  return `<span class="card-corner">${mark} ${value}</span><span class="card-art" aria-hidden="true">${value}</span><span class="card-name">${card.spectrum ?? "PRISM"}<br>${card.kind === "number" ? `NUMBER ${card.value}` : card.kind === "draw2" ? "DRAW TWO" : card.kind === "draw4" ? "WILD DRAW FOUR" : card.kind.toUpperCase()}</span>`;
+}
+function cardElement(c: Card, playable = false) {
+  const node = document.createElement(playable ? "button" : "div");
+  node.className = `card ${c.spectrum ?? "prism"}`;
+  node.innerHTML = cardContent(c);
+  return node;
+}
+function save() {
+  try {
+    localStorage.setItem(saveKey, encode(state));
+    if (!saveNote.startsWith("Invalid")) saveNote = "Autosaved on this device";
+  } catch {
+    saveNote = "Save failed · keep this tab open to retain the match";
+  }
+}
+function dialogOpen() {
+  return [wild, guide, confirm, result].some((x) => x.open);
+}
+function schedule() {
+  clock.cancel();
+  if (
+    !dialogOpen() &&
+    state.current !== 0 &&
+    (state.phase === "turn" || state.phase === "drawn")
+  ) {
+    const revision = state.revision;
+    clock.schedule(() => {
+      if (state.revision === revision && !dialogOpen()) {
+        state = aiTurn(state);
+        save();
+        render();
+      }
+    });
+  }
+}
+function dispatch(action: Action) {
+  if (dialogOpen()) return;
+  const next = act(state, 0, action);
+  if (next === state) {
+    feedback = "That action is not available now.";
+    get("feedback").textContent = feedback;
+    return;
+  }
+  state = next;
+  feedback = "";
+  save();
+  render();
+}
+function scoreMarkup() {
+  return names
+    .map(
+      (name, i) =>
+        `<div><span>${name}</span><b>${state.scores[i]}<small> / 250</small></b></div>`,
+    )
+    .join("");
+}
+function render() {
+  const focused = document.activeElement?.id;
+  const human =
+    state.current === 0 && (state.phase === "turn" || state.phase === "drawn");
+  const legal = legalCards(state);
+  get("round").textContent = `ROUND ${String(state.round).padStart(2, "0")}`;
+  get("direction").textContent =
+    state.direction === 1 ? "↻ You → Mira → Sol" : "↺ You → Sol → Mira";
+  get("opponents").innerHTML = [1, 2]
+    .map(
+      (i) =>
+        `<article class="opponent ${state.current === i && human === false && (state.phase === "turn" || state.phase === "drawn") ? "thinking" : ""}" aria-label="${names[i]}, ${state.hands[i].length} cards"><div class="avatar">${i === 1 ? "M" : "S"}</div><div><h2>${names[i]} <span>${state.hands[i].length === 1 ? "RELAY!" : ""}</span></h2><p>${state.hands[i].length} cards · ${state.scores[i]} pts</p><div class="mini-backs" aria-hidden="true">${"<i></i>".repeat(Math.min(8, state.hands[i].length))}</div></div></article>`,
+    )
+    .join("");
+  get("discard").replaceChildren(cardElement(state.discard.at(-1)!));
+  get("active").textContent =
+    `${marks[state.active]} ${state.active.toUpperCase()} IN PLAY`;
+  get("supply").textContent = `${state.deck.length} in supply`;
+  get("turn").textContent =
+    state.phase === "round" || state.phase === "match"
+      ? state.winner === null
+        ? "Table blocked"
+        : `${names[state.winner]} won the round`
+      : human
+        ? state.phase === "drawn"
+          ? "Your choice · play the drawn card or pass"
+          : "Your turn · keep the light moving"
+        : `${names[state.current]} is thinking…`;
+  get("feedback").textContent =
+    feedback ||
+    (human && state.hands[0].length === 2 && !state.declared
+      ? "Two cards? Call Relay! before you play."
+      : state.declared && human
+        ? "Relay armed · now play your card."
+        : "Match the spectrum, number or symbol.");
+  for (const id of ["draw", "draw-pile"])
+    get<HTMLButtonElement>(id).disabled = !human || state.phase !== "turn";
+  get<HTMLButtonElement>("pass").disabled = !human || state.phase !== "drawn";
+  get<HTMLButtonElement>("declare").disabled =
+    !human || state.hands[0].length !== 2 || state.declared;
+  get("show-result").hidden =
+    state.phase !== "round" && state.phase !== "match";
+  get("hand-count").textContent = `(${state.hands[0].length})`;
+  get("hand-help").textContent =
+    state.phase === "drawn" && human
+      ? "Only the drawn card can be played"
+      : human
+        ? "Lit cards can be played"
+        : "Waiting for your turn";
+  const hand = get("hand");
+  hand.replaceChildren();
+  for (const c of state.hands[0]) {
+    const button = cardElement(c, true) as HTMLButtonElement;
+    button.id = `card-${c.id}`;
+    button.disabled = !human || !legal.includes(c.id);
+    button.classList.toggle("legal", !button.disabled);
+    button.classList.toggle("drawn", c.id === state.drawn);
+    button.setAttribute(
+      "aria-label",
+      `Play ${cardLabel(c)}${c.id === state.drawn ? " (drawn card)" : ""}`,
+    );
+    button.onclick = () => {
+      if (
+        dialogOpen() ||
+        state.current !== 0 ||
+        !legalCards(state).includes(c.id)
+      )
+        return;
+      if (c.spectrum === null) {
+        pending = c.id;
+        clock.cancel();
+        wild.showModal();
+      } else dispatch({ type: "play", id: c.id });
+    };
+    hand.append(button);
+  }
+  get("scores").innerHTML = scoreMarkup();
+  get("log").replaceChildren(
+    ...state.log
+      .slice(-5)
+      .reverse()
+      .map((line) => {
+        const li = document.createElement("li");
+        li.textContent = line;
+        return li;
+      }),
+  );
+  get("save-status").textContent = saveNote;
+  if (focused) {
+    const node = document.getElementById(focused) as HTMLButtonElement | null;
+    if (node && !node.disabled) node.focus({ preventScroll: true });
+  }
+  if (
+    (state.phase === "round" || state.phase === "match") &&
+    resultSeen !== state.revision
+  ) {
+    resultSeen = state.revision;
+    showResult();
+  }
+  schedule();
+}
+function showResult() {
+  get("result-tag").textContent =
+    state.phase === "match" ? "THE NIGHT BELONGS TO…" : "ROUND COMPLETE";
+  get("result-title").textContent =
+    state.winner === null
+      ? "A quiet table. Deal again."
+      : state.winner === 0
+        ? state.phase === "match"
+          ? "You take the night!"
+          : "You carried the light!"
+        : `${names[state.winner]} ${state.phase === "match" ? "takes the night." : "wins this round."}`;
+  get("result-description").textContent =
+    state.winner === null
+      ? "All supply was held. No points awarded."
+      : `${state.award} points from the remaining hands. ${state.winner === 0 ? "Beautifully played." : "Another deal, another chance."}`;
+  get("result-scores").innerHTML = scoreMarkup();
+  get("next-round").textContent =
+    state.phase === "match" ? "Play a rematch" : "Deal next round";
+  clock.cancel();
+  result.showModal();
+}
+for (const s of spectra) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = s;
+  b.textContent = `${marks[s]} ${s[0].toUpperCase() + s.slice(1)}`;
+  b.onclick = () => {
+    const id = pending;
+    pending = null;
+    wild.close();
+    if (id !== null) dispatch({ type: "play", id, spectrum: s });
+  };
+  get("spectra").append(b);
+}
+get("rules").onclick = () => {
+  clock.cancel();
+  guide.showModal();
+};
+get("close-guide").onclick = () => guide.close();
+get("reset").onclick = () => {
+  clock.cancel();
+  confirm.showModal();
+};
+get("confirm-reset").onclick = () => {
+  clock.cancel();
+  state = newMatch();
+  feedback = "A fresh match. Your move.";
+  resultSeen = -1;
+  save();
+};
+get("draw").onclick = get("draw-pile").onclick = () =>
+  dispatch({ type: "draw" });
+get("pass").onclick = () => dispatch({ type: "pass" });
+get("declare").onclick = () => dispatch({ type: "declare" });
+get("next-round").onclick = () => {
+  const match = state.phase === "match";
+  result.close();
+  if (match) {
+    clock.cancel();
+    confirm.showModal();
+  } else {
+    state = act(state, state.current, { type: "next" });
+    feedback = "";
+    save();
+    render();
+  }
+};
+get("view-table").onclick = () => result.close();
+get("show-result").onclick = () => {
+  if (state.phase === "round" || state.phase === "match") showResult();
+};
+for (const d of [wild, guide, confirm, result]) {
+  d.addEventListener("close", () => {
+    if (d === wild) pending = null;
+    render();
+  });
+}
+document.addEventListener("keydown", (e) => {
+  if (dialogOpen() || e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+  if (e.key.toLowerCase() === "d") {
+    e.preventDefault();
+    dispatch({ type: "draw" });
+  }
+  if (e.key.toLowerCase() === "p") {
+    e.preventDefault();
+    dispatch({ type: "pass" });
+  }
+  if (e.key.toLowerCase() === "r") {
+    e.preventDefault();
+    dispatch({ type: "declare" });
+  }
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) clock.cancel();
+  else schedule();
+});
+window.addEventListener("pagehide", () => clock.cancel());
+save();
+render();
+if (!loaded) {
+  clock.cancel();
+  guide.showModal();
+}
