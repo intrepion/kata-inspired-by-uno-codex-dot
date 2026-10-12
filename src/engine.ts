@@ -113,7 +113,10 @@ function deal(s: State) {
   s.winner = null;
   s.award = 0;
   s.blocked = 0;
-  note(s, `Round ${s.round}. ${names[s.current]} lead.`);
+  note(
+    s,
+    `Round ${s.round}. ${names[s.current]} ${s.current === 0 ? "lead" : "leads"}.`,
+  );
 }
 function take(s: State, seat: number, count: number) {
   const taken: Card[] = [];

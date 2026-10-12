@@ -60,7 +60,7 @@ const marks: Record<Spectrum, string> = {
 function cardContent(card: Card) {
   const mark = card.spectrum ? marks[card.spectrum] : "✦",
     value = card.kind === "number" ? String(card.value) : symbols[card.kind];
-  return `<span class="card-corner">${mark} ${value}</span><span class="card-art" aria-hidden="true">${value}</span><span class="card-name">${card.spectrum ?? "PRISM"}<br>${card.kind === "number" ? `NUMBER ${card.value}` : card.kind === "draw2" ? "DRAW TWO" : card.kind === "draw4" ? "WILD DRAW FOUR" : card.kind.toUpperCase()}</span>`;
+  return `<span class="card-corner">${mark} ${value}</span><span class="card-art${card.kind === "draw4" ? " compact" : ""}" aria-hidden="true">${value}</span><span class="card-name">${card.spectrum ?? "PRISM"}<br>${card.kind === "number" ? `NUMBER ${card.value}` : card.kind === "draw2" ? "DRAW TWO" : card.kind === "draw4" ? "WILD DRAW FOUR" : card.kind.toUpperCase()}</span>`;
 }
 function cardElement(c: Card, playable = false) {
   const node = document.createElement(playable ? "button" : "div");
@@ -128,7 +128,7 @@ function render() {
   get("opponents").innerHTML = [1, 2]
     .map(
       (i) =>
-        `<article class="opponent ${state.current === i && human === false && (state.phase === "turn" || state.phase === "drawn") ? "thinking" : ""}" aria-label="${names[i]}, ${state.hands[i].length} cards"><div class="avatar">${i === 1 ? "M" : "S"}</div><div><h2>${names[i]} <span>${state.hands[i].length === 1 ? "RELAY!" : ""}</span></h2><p>${state.hands[i].length} cards · ${state.scores[i]} pts</p><div class="mini-backs" aria-hidden="true">${"<i></i>".repeat(Math.min(8, state.hands[i].length))}</div></div></article>`,
+        `<article class="opponent ${state.current === i && human === false && (state.phase === "turn" || state.phase === "drawn") ? "thinking" : ""}" aria-label="${names[i]}, ${state.hands[i].length} ${state.hands[i].length === 1 ? "card" : "cards"}"><div class="avatar">${i === 1 ? "M" : "S"}</div><div><h2>${names[i]} <span>${state.hands[i].length === 1 ? "RELAY!" : ""}</span></h2><p>${state.hands[i].length} ${state.hands[i].length === 1 ? "card" : "cards"} · ${state.scores[i]} pts</p><div class="mini-backs" aria-hidden="true">${"<i></i>".repeat(Math.min(8, state.hands[i].length))}</div></div></article>`,
     )
     .join("");
   get("discard").replaceChildren(cardElement(state.discard.at(-1)!));
@@ -147,11 +147,13 @@ function render() {
         : `${names[state.current]} is thinking…`;
   get("feedback").textContent =
     feedback ||
-    (human && state.hands[0].length === 2 && !state.declared
-      ? "Two cards? Call Relay! before you play."
-      : state.declared && human
-        ? "Relay armed · now play your card."
-        : "Match the spectrum, number or symbol.");
+    (human && !legal.length
+      ? "No matching card · draw one to continue."
+      : human && state.hands[0].length === 2 && !state.declared
+        ? "Two cards? Call Relay! before you play."
+        : state.declared && human
+          ? "Relay armed · now play your card."
+          : "Match the spectrum, number or symbol.");
   for (const id of ["draw", "draw-pile"])
     get<HTMLButtonElement>(id).disabled = !human || state.phase !== "turn";
   get<HTMLButtonElement>("pass").disabled = !human || state.phase !== "drawn";

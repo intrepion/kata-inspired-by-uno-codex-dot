@@ -718,3 +718,7 @@ a {
     animation: none !important;
   }
 }
+
+.card .card-art.compact {
+  font-size: 28px;
+}

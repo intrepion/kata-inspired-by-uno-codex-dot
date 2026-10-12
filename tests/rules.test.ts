@@ -152,17 +152,20 @@ describe("documented rule semantics", () => {
     expect(next.hands[1]).toHaveLength(5);
     expect(next.winner).toBe(0);
     expect(next.phase).toBe("match");
-    expect(next.award).toBe(
-      next.hands
-        .slice(1)
-        .flat()
-        .reduce(
-          (sum, c) =>
-            sum + (c.kind === "number" ? c.value : c.spectrum ? 20 : 50),
-          0,
-        ),
-    );
+    // Opponents' 3 + 5, plus four wilds at 50 each drawn from the fixture pack.
+    expect(next.award).toBe(208);
     expect(act(next, next.current, { type: "draw" })).toBe(next);
+    conserved(next);
+  });
+  it("finishing draw two scores the penalty cards before the next deal", () => {
+    const c = find("coral", "draw2"),
+      s = rig([c]);
+    const next = act(s, 0, { type: "play", id: c.id });
+    expect(next.hands[1]).toHaveLength(3);
+    // Remaining 3 + 5, plus two drawn wilds at 50 each.
+    expect(next.award).toBe(108);
+    expect(next.phase).toBe("round");
+    expect(next.scores).toEqual([108, 0, 0]);
     conserved(next);
   });
   it("number, skip, reverse and wild can finish", () => {
