@@ -40,3 +40,7 @@ npm audit --audit-level=low
 Strict TypeScript, Vitest rule/save/AI/lifecycle tests, deterministic full-match conservation simulations and production Vite build. GitHub Actions runs the same checks and audit. [QA evidence](docs/QA.md) distinguishes actual Chrome interactions from simulations; [independent reviews](docs/REVIEW.md) record fixes.
 
 Complete-state local saves necessarily contain every hand and are inspectable/editable, so they are **not cheat-proof**. AI decisions receive only their own cards and public information. Opponent faces never appear in the UI or accessibility labels. No audio is included. The game is designed for mouse, keyboard and touch; responsive browser emulation is separate from physical touchscreen testing.
+
+## Play online
+
+[Play the hosted game](https://intrepion.github.io/kata-inspired-by-uno-codex-dot/)
