@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "workflowCommit": "03d51a1ce7ca9eab8cd388ac79990ce4fdc40941",
+  "sourceCommit": "4fc3d3a3fe7e535fb4903aafd1595b87b3d7df45",
+  "runId": "41406347965",
+  "url": "http://127.0.0.1:4225/",
+  "inputs": {
+    "index.html": "0aac87c260cd49e343bc84c09830e0c09ba04b995dd6c86b69b158d30bcd8f4f",
+    "assets/index-DRMBXaAU.css": "577810fd3dec55648bfd3ccaa21cfdc82c8dd78e11b58281dd8450cf748f2ea7",
+    "assets/index-DSqZact9.js": "a91963ed5031b78135afedee00e5553bc65597d049f852d79426a5b9c7e4811c"
+  },
+  "browser": "153.0.8010.12",
+  "seed": 173,
+  "viewport": {
+    "width": 1280,
+    "height": 1000
+  },
+  "screenshots": [
+    "prism-relay-01.png",
+    "prism-relay-02.png"
+  ]
+}

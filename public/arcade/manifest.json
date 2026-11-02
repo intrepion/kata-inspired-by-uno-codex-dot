@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "gameId": "kata-inspired-by-uno-codex-dot",
   "playUrl": "https://intrepion.github.io/kata-inspired-by-uno-codex-dot/",
   "screenshots": [
@@ -23,6 +23,46 @@
         "sourcePath": "docs/screenshots/relay-declaration.jpg",
         "deployedBuild": null,
         "captureDate": null
+      }
+    },
+    {
+      "path": "arcade/screenshots/ci-20261102-01.jpg",
+      "sha256": "f2fcbf86773867bea5760d8d27a98f010c263c04d6c7ba679f8b431029154024",
+      "alt": "Prism Relay gameplay, view 1",
+      "provenance": {
+        "kind": "ci_gameplay_capture",
+        "sourcePath": "arcade/capture-evidence/ci-20261102-01.png",
+        "sourceSha256": "8dadfc86345710fec4e27059e28201cfcc2335e373b405ccfe29ac80646f6d77",
+        "captureCommit": "4fc3d3a3fe7e535fb4903aafd1595b87b3d7df45",
+        "workflowRunId": "41406347965",
+        "inputHashes": {
+          "index.html": "0aac87c260cd49e343bc84c09830e0c09ba04b995dd6c86b69b158d30bcd8f4f",
+          "assets/index-DRMBXaAU.css": "577810fd3dec55648bfd3ccaa21cfdc82c8dd78e11b58281dd8450cf748f2ea7",
+          "assets/index-DSqZact9.js": "a91963ed5031b78135afedee00e5553bc65597d049f852d79426a5b9c7e4811c"
+        },
+        "publishedFilesVerifiedAt": "2026-11-02T19:01:20Z",
+        "captureRecordPath": "arcade/capture-evidence/ci-20261102-record.json",
+        "captureRecordSha256": "04898b4e76b352b9c563808f889c8fc42e8b46b802eb9774c84de3f6fb7685a8"
+      }
+    },
+    {
+      "path": "arcade/screenshots/ci-20261102-02.jpg",
+      "sha256": "a20f21907f430869a914f15117e5d31fd56ceca7711c015301e2e609e64941ee",
+      "alt": "Prism Relay gameplay, view 2",
+      "provenance": {
+        "kind": "ci_gameplay_capture",
+        "sourcePath": "arcade/capture-evidence/ci-20261102-02.png",
+        "sourceSha256": "35ab81dbd906ce20eabfc65d954a225d966544ba94fa4f9a3bcfad5d2f097827",
+        "captureCommit": "4fc3d3a3fe7e535fb4903aafd1595b87b3d7df45",
+        "workflowRunId": "41406347965",
+        "inputHashes": {
+          "index.html": "0aac87c260cd49e343bc84c09830e0c09ba04b995dd6c86b69b158d30bcd8f4f",
+          "assets/index-DRMBXaAU.css": "577810fd3dec55648bfd3ccaa21cfdc82c8dd78e11b58281dd8450cf748f2ea7",
+          "assets/index-DSqZact9.js": "a91963ed5031b78135afedee00e5553bc65597d049f852d79426a5b9c7e4811c"
+        },
+        "publishedFilesVerifiedAt": "2026-11-02T19:01:20Z",
+        "captureRecordPath": "arcade/capture-evidence/ci-20261102-record.json",
+        "captureRecordSha256": "04898b4e76b352b9c563808f889c8fc42e8b46b802eb9774c84de3f6fb7685a8"
       }
     }
   ]
