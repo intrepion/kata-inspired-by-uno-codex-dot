@@ -7,7 +7,7 @@ export type Card = {
   kind: Kind;
   value: number;
 };
-export type Phase = "turn" | "drawn" | "round" | "match";
+export type Phase = "turn" | "drawn" | "challenge" | "round" | "match";
 export type State = {
   version: 1;
   seed: number;
@@ -19,6 +19,7 @@ export type State = {
   direction: 1 | -1;
   phase: Phase;
   drawn: number | null;
+  challenge?: { offender: number; illegal: boolean; pendingWin: boolean };
   declared: boolean;
   scores: number[];
   round: number;
@@ -30,7 +31,7 @@ export type State = {
 };
 export type Action =
   | { type: "play"; id: number; spectrum?: Spectrum }
-  | { type: "draw" | "pass" | "declare" | "next" };
+  | { type: "draw" | "pass" | "declare" | "next" | "accept4" | "challenge4" };
 export const names = ["You", "Mira", "Sol"];
 export function makeDeck(): Card[] {
   const deck: Card[] = [];
@@ -109,6 +110,7 @@ function deal(s: State) {
   s.direction = 1;
   s.phase = "turn";
   s.drawn = null;
+  delete s.challenge;
   s.declared = false;
   s.winner = null;
   s.award = 0;
@@ -143,7 +145,7 @@ export function legalCards(s: State): number[] {
       (c) =>
         (s.phase !== "drawn" || c.id === s.drawn) &&
         (c.kind === "wild" ||
-          (c.kind === "draw4" && !h.some((x) => x.spectrum === s.active)) ||
+          c.kind === "draw4" ||
           c.spectrum === s.active ||
           (c.spectrum !== null &&
             c.kind === top.kind &&
@@ -157,6 +159,13 @@ function advance(s: State, steps = 1) {
   s.drawn = null;
   s.declared = false;
 }
+function finishRound(s: State, actor: number) {
+  s.winner = actor;
+  s.award = s.hands.reduce((sum, h, i) => sum + (i === actor ? 0 : h.reduce((n, c) => n + points(c), 0)), 0);
+  s.scores[actor] += s.award;
+  s.phase = s.scores[actor] >= 250 ? "match" : "round";
+  note(s, `${names[actor]} ${actor === 0 ? "win" : "wins"} ${s.award} points!`);
+}
 export function act(state: State, actor: number, action: Action): State {
   if (actor !== state.current) return state;
   if (action.type === "next") {
@@ -164,6 +173,21 @@ export function act(state: State, actor: number, action: Action): State {
     const s = structuredClone(state);
     deal(s);
     s.revision++;
+    return s;
+  }
+  if (state.phase === "challenge") {
+    if (!state.challenge || (action.type !== "accept4" && action.type !== "challenge4")) return state;
+    const s = structuredClone(state), pending = s.challenge!;
+    s.revision++;
+    const successful = action.type === "challenge4" && pending.illegal;
+    const victim = successful ? pending.offender : actor;
+    const count = successful || action.type === "accept4" ? 4 : 6;
+    const got = take(s, victim, count);
+    note(s, successful ? `${names[actor]} challenged successfully · ${names[victim]} ${victim === 0 ? "draw" : "draws"} ${got.length}.` : action.type === "challenge4" ? `Challenge failed · ${names[victim]} ${victim === 0 ? "draw" : "draws"} ${got.length}.` : `${names[actor]} ${actor === 0 ? "accept" : "accepts"} and ${actor === 0 ? "draw" : "draws"} ${got.length}.`);
+    delete s.challenge;
+    if (successful) { s.phase = "turn"; s.drawn = null; s.declared = false; }
+    else advance(s);
+    if (pending.pendingWin && !successful) finishRound(s, pending.offender);
     return s;
   }
   if (state.phase !== "turn" && state.phase !== "drawn") return state;
@@ -214,6 +238,7 @@ export function act(state: State, actor: number, action: Action): State {
     return s;
   }
   if (action.type !== "play") return state;
+  const illegalDraw4 = state.hands[actor].some(c => c.spectrum === state.active);
   const hand = s.hands[actor],
     index = hand.findIndex((c) => c.id === action.id),
     card = hand.splice(index, 1)[0];
@@ -230,7 +255,13 @@ export function act(state: State, actor: number, action: Action): State {
   }
   if (card.kind === "reverse") s.direction = s.direction === 1 ? -1 : 1;
   const next = (actor + s.direction + 3) % 3;
-  const penalty = card.kind === "draw2" ? 2 : card.kind === "draw4" ? 4 : 0;
+  if (card.kind === "draw4") {
+    s.current = next; s.phase = "challenge"; s.drawn = null; s.declared = false;
+    s.challenge = { offender: actor, illegal: illegalDraw4, pendingWin: hand.length === 0 };
+    note(s, `${names[next]} may accept four or challenge.`);
+    return s;
+  }
+  const penalty = card.kind === "draw2" ? 2 : 0;
   if (penalty) {
     const got = take(s, next, penalty);
     note(
@@ -242,20 +273,7 @@ export function act(state: State, actor: number, action: Action): State {
     note(s, `${names[next]} ${next === 0 ? "are" : "is"} skipped.`);
   const finished = hand.length === 0;
   advance(s, penalty || card.kind === "skip" ? 2 : 1);
-  if (finished) {
-    s.winner = actor;
-    s.award = s.hands.reduce(
-      (sum, h, i) =>
-        sum + (i === actor ? 0 : h.reduce((n, c) => n + points(c), 0)),
-      0,
-    );
-    s.scores[actor] += s.award;
-    s.phase = s.scores[actor] >= 250 ? "match" : "round";
-    note(
-      s,
-      `${names[actor]} ${actor === 0 ? "win" : "wins"} ${s.award} points!`,
-    );
-  }
+  if (finished) finishRound(s, actor);
   return s;
 }
 export const symbols: Record<Kind, string> = {
@@ -291,7 +309,7 @@ export function aiView(s: State): AIView {
 }
 export function chooseAI(v: AIView): Action {
   const choices = v.hand
-    .filter((c) => v.legal.includes(c.id))
+    .filter((c) => v.legal.includes(c.id) && (c.kind !== "draw4" || !v.hand.some(x => x.spectrum === v.active)))
     .sort(
       (a, b) =>
         points(b) +
@@ -308,6 +326,7 @@ export function chooseAI(v: AIView): Action {
   return { type: "play", id: c.id, ...(!c.spectrum ? { spectrum } : {}) };
 }
 export function aiTurn(s: State) {
+  if (s.phase === "challenge") return act(s, s.current, {type: ["coral", "mint"].includes(s.active) ? "challenge4" : "accept4"});
   let current = s;
   if (s.hands[s.current].length === 2 && !s.declared)
     current = act(s, s.current, { type: "declare" });

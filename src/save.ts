@@ -39,7 +39,7 @@ export function decode(raw: string): State | null {
       !spectra.includes(s.active) ||
       ![0, 1, 2].includes(s.current) ||
       ![1, -1].includes(s.direction) ||
-      !["turn", "drawn", "round", "match"].includes(s.phase)
+      !["turn", "drawn", "challenge", "round", "match"].includes(s.phase)
     )
       return null;
     const integer = (n: unknown) =>
@@ -79,8 +79,18 @@ export function decode(raw: string): State | null {
       s.discard.at(-1)!.spectrum !== s.active
     )
       return null;
+    if (s.phase === "challenge") {
+      const c = s.challenge;
+      if (!c || ![0,1,2].includes(c.offender) || c.offender === s.current ||
+          (c.offender + s.direction + 3) % 3 !== s.current || typeof c.illegal !== "boolean" ||
+          typeof c.pendingWin !== "boolean" || c.pendingWin !== (s.hands[c.offender].length === 0) ||
+          s.discard.at(-1)!.kind !== "draw4" || s.declared || s.winner !== null ||
+          s.hands.some((h,i) => i !== c.offender && !h.length) || s.scores.some(x => x >= 250)) return null;
+    } else if (s.challenge !== undefined) return null;
     if (s.declared && s.hands[s.current].length !== 2) return null;
-    if (s.phase === "turn" || s.phase === "drawn") {
+    if (s.phase === "challenge") {
+      // The offender may temporarily have an empty hand until the decision.
+    } else if (s.phase === "turn" || s.phase === "drawn") {
       if (
         s.winner !== null ||
         s.hands.some((h) => !h.length) ||

@@ -21,7 +21,7 @@ For development, `npm run dev` uses the same port and refuses if occupied. Produ
 Use card buttons or Tab/Enter. **D** draws one, **P** passes a drawn card, **R** declares Relay. Native dialogs trap focus; Escape cancels a wild without consuming it. The tutorial contains all rules and departures. A New Match/rematch confirmation protects scores. Every committed action autosaves, including drawn choices and AI turns; reload resumes safely. Play one tab per match.
 
 - Standard 108-card distribution, seven cards, three seats. No two-player mode.
-- Match spectrum or number/action symbol. Wild is always legal. Wild Draw Four requires no active-spectrum card in hand; enforcement replaces bluff/challenge/hand revelation.
+- Match spectrum or number/action symbol. Wild is always legal. Wild Draw Four is lawful only without an active-spectrum card. The next player may accept four or challenge; a successful challenge gives the offender four cards, while a failed challenge costs the challenger six. The legality outcome is announced without exposing the full hand. Bots play lawful Draw Fours and decide challenges from the publicly chosen spectrum.
 - No draw stacking. Penalties draw immediately and skip their victim. Voluntary one-card draws allowed; only the newly drawn card can play, or pass. An unplayable draw passes automatically.
 - Number-only opening discard; starting seat rotates each round, clockwise initially.
 - Press Relay with two cards before playing down to one. An automatic two-card penalty replaces the publisher’s timed catch window; bots declare reliably.

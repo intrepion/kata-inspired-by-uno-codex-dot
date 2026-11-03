@@ -63,13 +63,29 @@ describe("documented rule semantics", () => {
     );
     expect(legalCards(s)).toEqual([find("azure", "skip").id]);
   });
-  it("strictly rejects wild draw four with matching spectrum but permits symbol matches", () => {
+  it("allows a bluff and resolves successful or failed challenges", () => {
     const wild = find(null, "draw4");
-    let s = rig([wild, n("coral", 2)]);
-    expect(legalCards(s)).not.toContain(wild.id);
-    expect(act(s, 0, { type: "play", id: wild.id, spectrum: "mint" })).toBe(s);
-    s = rig([wild, n("azure", 7)]);
+    let s = rig([wild, n("coral", 2)]);s.declared=true;
     expect(legalCards(s)).toContain(wild.id);
+    let pending=act(s,0,{type:"play",id:wild.id,spectrum:"mint"});
+    expect(pending.phase).toBe("challenge");expect(decode(encode(pending))).toEqual(pending);
+    let resolved=act(pending,1,{type:"challenge4"});
+    expect(resolved.hands[0]).toHaveLength(5);expect(resolved.current).toBe(1);expect(resolved.phase).toBe("turn");conserved(resolved);
+    s=rig([wild,n("azure",7)]);s.declared=true;
+    pending=act(s,0,{type:"play",id:wild.id,spectrum:"mint"});
+    resolved=act(pending,1,{type:"challenge4"});
+    expect(resolved.hands[1]).toHaveLength(7);expect(resolved.current).toBe(2);conserved(resolved);
+    const accepted=act(pending,1,{type:"accept4"});expect(accepted.hands[1]).toHaveLength(5);expect(accepted.current).toBe(2);
+  });
+  it("uses public challenge information and survives reverse-order save/reload", () => {
+    const wild=find(null,"draw4"),s=rig([wild,n("coral",2)]);s.declared=true;s.direction=-1;
+    const pending=act(s,0,{type:"play",id:wild.id,spectrum:"mint"});
+    expect(pending.current).toBe(2);expect(decode(encode(pending))).toEqual(pending);
+    const altered=structuredClone(pending);altered.challenge!.illegal=false;
+    const a=aiTurn(pending),b=aiTurn(altered);
+    // The decision to challenge is public; the outcome depends on the recorded legality.
+    expect(a.log.at(-1)).toContain("challenged successfully");expect(b.log.at(-1)).toContain("Challenge failed");
+    const bad=structuredClone(pending);bad.challenge!.offender=1;expect(decode(encode(bad))).toBeNull();
   });
   it("resolves draw two immediately, skips the victim and does not stack", () => {
     const c = find("coral", "draw2");
@@ -148,7 +164,10 @@ describe("documented rule semantics", () => {
     const c = find(null, "draw4"),
       s = rig([c]);
     s.scores[0] = 249;
-    const next = act(s, 0, { type: "play", id: c.id, spectrum: "mint" });
+    const pending = act(s, 0, { type: "play", id: c.id, spectrum: "mint" });
+    expect(pending.phase).toBe("challenge");
+    expect(decode(encode(pending))).toEqual(pending);
+    const next = act(pending, 1, {type:"accept4"});
     expect(next.hands[1]).toHaveLength(5);
     expect(next.winner).toBe(0);
     expect(next.phase).toBe("match");
