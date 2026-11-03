@@ -1,5 +1,7 @@
 # Prism Relay
 
+[Kata Arcade](https://intrepion.github.io/)
+
 A private, original shedding-card browser game for one person and two fair AI opponents. Four geometric spectra, sculpted paper cards and a night-club table. Match spectrum, number or action; change direction, skip seats, draw penalties and choose a wild spectrum. Call **Relay!** before your last card. Play successive rounds to 250 points.
 
 ## Play locally
