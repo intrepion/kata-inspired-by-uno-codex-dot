@@ -4,65 +4,43 @@
   "playUrl": "https://intrepion.github.io/kata-inspired-by-uno-codex-dot/",
   "screenshots": [
     {
-      "path": "arcade/screenshots/view-01.jpg",
-      "sha256": "27847b9fa398531b4e62c88f0fb26fccae0855e62013572a36dd43012bab2ef7",
-      "alt": "Gameplay capture 1",
-      "provenance": {
-        "kind": "existing_repository_capture",
-        "sourcePath": "docs/screenshots/fresh-table.jpg",
-        "deployedBuild": null,
-        "captureDate": null
-      }
-    },
-    {
-      "path": "arcade/screenshots/view-02.jpg",
-      "sha256": "4305306c48da4934b7b5d896de672197f9f262bd7bbad4d493758f4c62810f6c",
-      "alt": "Gameplay capture 2",
-      "provenance": {
-        "kind": "existing_repository_capture",
-        "sourcePath": "docs/screenshots/relay-declaration.jpg",
-        "deployedBuild": null,
-        "captureDate": null
-      }
-    },
-    {
-      "path": "arcade/screenshots/ci-20261102-01.jpg",
-      "sha256": "f2fcbf86773867bea5760d8d27a98f010c263c04d6c7ba679f8b431029154024",
-      "alt": "Prism Relay gameplay, view 1",
+      "path": "arcade/screenshots/review-20261103-01.jpg",
+      "sha256": "ee4a1fb380f90fa0b74e8edb24dc85cd25e3a445d8b9b258b8801d9039fe6af1",
+      "alt": "Prism Relay gameplay after the mechanics update, view 1",
       "provenance": {
         "kind": "ci_gameplay_capture",
-        "sourcePath": "arcade/capture-evidence/ci-20261102-01.png",
-        "sourceSha256": "8dadfc86345710fec4e27059e28201cfcc2335e373b405ccfe29ac80646f6d77",
-        "captureCommit": "4fc3d3a3fe7e535fb4903aafd1595b87b3d7df45",
-        "workflowRunId": "41406347965",
+        "sourcePath": "arcade/capture-evidence/review-20261103-01.png",
+        "sourceSha256": "ae5bf9042a15c5f722979a7a7c8b84405023a6c38d9df55df8509964ee669825",
+        "captureCommit": "94ea704aa3a80299ddda399e37931b3a2253b8d5",
+        "workflowRunId": "41675611687",
         "inputHashes": {
-          "index.html": "0aac87c260cd49e343bc84c09830e0c09ba04b995dd6c86b69b158d30bcd8f4f",
+          "index.html": "99b63e65a018b2a82520ca7db972c41db60c16cf0c12c6c9918c24eaf1563267",
           "assets/index-DRMBXaAU.css": "577810fd3dec55648bfd3ccaa21cfdc82c8dd78e11b58281dd8450cf748f2ea7",
-          "assets/index-DSqZact9.js": "a91963ed5031b78135afedee00e5553bc65597d049f852d79426a5b9c7e4811c"
+          "assets/index-DNhmtRsT.js": "17ec91e8ffbf3a248446200eda944ef1169d188adc83453db7be659e8031b6f5"
         },
-        "publishedFilesVerifiedAt": "2026-11-02T19:01:20Z",
-        "captureRecordPath": "arcade/capture-evidence/ci-20261102-record.json",
-        "captureRecordSha256": "04898b4e76b352b9c563808f889c8fc42e8b46b802eb9774c84de3f6fb7685a8"
+        "publishedFilesVerifiedAt": "2026-11-03T16:39:44Z",
+        "captureRecordPath": "arcade/capture-evidence/review-20261103-record.json",
+        "captureRecordSha256": "e8b02b6be6944b3c65e964ea624b1fd9fcf954a8a7ab6aa104a82c8be1bc0bda"
       }
     },
     {
-      "path": "arcade/screenshots/ci-20261102-02.jpg",
-      "sha256": "a20f21907f430869a914f15117e5d31fd56ceca7711c015301e2e609e64941ee",
-      "alt": "Prism Relay gameplay, view 2",
+      "path": "arcade/screenshots/review-20261103-02.jpg",
+      "sha256": "1b53baff2984d9884b38b2bfc3996be2107e98007cc1278462e00027c8fc6afd",
+      "alt": "Prism Relay gameplay after the mechanics update, view 2",
       "provenance": {
         "kind": "ci_gameplay_capture",
-        "sourcePath": "arcade/capture-evidence/ci-20261102-02.png",
-        "sourceSha256": "35ab81dbd906ce20eabfc65d954a225d966544ba94fa4f9a3bcfad5d2f097827",
-        "captureCommit": "4fc3d3a3fe7e535fb4903aafd1595b87b3d7df45",
-        "workflowRunId": "41406347965",
+        "sourcePath": "arcade/capture-evidence/review-20261103-02.png",
+        "sourceSha256": "2d8f20d14ad5c2a9e55e056df2189bc3db9e15eec19fcb86799fc87ecbf331c5",
+        "captureCommit": "94ea704aa3a80299ddda399e37931b3a2253b8d5",
+        "workflowRunId": "41675611687",
         "inputHashes": {
-          "index.html": "0aac87c260cd49e343bc84c09830e0c09ba04b995dd6c86b69b158d30bcd8f4f",
+          "index.html": "99b63e65a018b2a82520ca7db972c41db60c16cf0c12c6c9918c24eaf1563267",
           "assets/index-DRMBXaAU.css": "577810fd3dec55648bfd3ccaa21cfdc82c8dd78e11b58281dd8450cf748f2ea7",
-          "assets/index-DSqZact9.js": "a91963ed5031b78135afedee00e5553bc65597d049f852d79426a5b9c7e4811c"
+          "assets/index-DNhmtRsT.js": "17ec91e8ffbf3a248446200eda944ef1169d188adc83453db7be659e8031b6f5"
         },
-        "publishedFilesVerifiedAt": "2026-11-02T19:01:20Z",
-        "captureRecordPath": "arcade/capture-evidence/ci-20261102-record.json",
-        "captureRecordSha256": "04898b4e76b352b9c563808f889c8fc42e8b46b802eb9774c84de3f6fb7685a8"
+        "publishedFilesVerifiedAt": "2026-11-03T16:39:44Z",
+        "captureRecordPath": "arcade/capture-evidence/review-20261103-record.json",
+        "captureRecordSha256": "e8b02b6be6944b3c65e964ea624b1fd9fcf954a8a7ab6aa104a82c8be1bc0bda"
       }
     }
   ]
